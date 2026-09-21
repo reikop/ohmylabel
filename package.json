@@ -1,0 +1,9 @@
+{
+  "name": "ohmylabel",
+  "private": true,
+  "scripts": {
+    "test": "node tests/app.test.cjs && node tests/precision.test.cjs && node tests/precision-ui.test.cjs",
+    "pdf:fixtures": "node scripts/generate-pdf-fixtures.cjs"
+  },
+  "devDependencies": { "jsdom": "26.1.0" }
+}

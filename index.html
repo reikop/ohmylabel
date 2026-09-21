@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#355e48">
+  <title>오마이라벨 — 가볍게 만들고, 딱 맞게 인쇄하세요</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="./" aria-label="오마이라벨 홈"><span class="brand-icon">o<span>!</span></span>ohmylabel<span class="beta">BETA</span></a>
+    <span class="header-caption">라벨 만드는 일이, 이렇게 가벼워지다.</span>
+    <button class="text-button" id="help">처음이신가요? <span>↗</span></button>
+  </header>
+  <main>
+    <section class="intro">
+      <div><div class="eyebrow"><span></span> 설치 없이, 브라우저에서 바로</div><h1>작은 라벨에 담는<br class="mobile-break"> 나만의 정리.</h1><p>라벨지를 고르고, 내용을 채우고, 인쇄하세요. 그게 전부예요.</p></div>
+      <div class="intro-art" aria-hidden="true"><div class="sample one"><small>MADE WITH LOVE</small><strong>오늘도 좋은 하루 ☀</strong><span>작은 마음을 담아 보냅니다</span></div><div class="sample two"><span>MY LITTLE THINGS</span><strong>차곡차곡, 나의 기록</strong><small>2026 · ARCHIVE</small></div><span class="spark">✳</span></div>
+    </section>
+    <nav class="steps" aria-label="작업 순서"><span class="active"><b>1</b> 라벨지 선택</span><i>→</i><span><b>2</b> 내용 편집</span><i>→</i><span><b>3</b> 인쇄하기</span><div class="local-note"><span>◉</span> 내 브라우저에만 안전하게 저장</div></nav>
+    <div class="workspace">
+      <aside class="panel paper-panel">
+        <div class="section-heading"><h2>라벨지 선택</h2><span class="step-tag">STEP 01</span></div>
+        <p class="muted">사용할 라벨지의 제품 번호를 확인해 주세요.</p>
+        <div class="brand-tabs" role="group" aria-label="라벨 브랜드"><button data-brand="any" class="active">A사</button><button data-brand="formtec">F사</button><button data-brand="custom">직접 설정</button></div>
+        <label class="search"><span>⌕</span><input id="search" type="search" placeholder="제품 번호 검색" aria-label="제품 번호 검색"></label>
+        <div class="catalog-filters"><label>모양<select id="shape-filter"><option value="all">전체 모양</option><option value="rect">사각형</option><option value="ellipse">원형·타원형</option></select></label><label>칸 수<select id="count-filter"><option value="all">전체 칸 수</option><option value="small">1–20칸</option><option value="medium">21–60칸</option><option value="large">61칸 이상</option></select></label></div>
+        <p class="tiny" id="catalog-count"></p><div id="products" class="products"></div>
+        <div class="paper-details"><div class="detail-title"><span>선택한 라벨지</span><strong id="selected-product"></strong></div><dl><div><dt>용지 크기</dt><dd>A4 <span>210 × 297 mm</span></dd></div><div><dt>라벨 크기</dt><dd id="label-size"></dd></div><div><dt>라벨 수</dt><dd id="label-count"></dd></div></dl></div>
+        <div class="spec-status" id="spec-status" role="status"></div><p class="tiny" id="source-version"></p>
+        <details id="geometry"><summary>정밀 규격 · 시작 위치 <span>⌄</span></summary><p class="tiny">제조사 데이터의 시작 좌표와 간격을 그대로 사용합니다. 수정하면 사용자 조정 규격으로 표시됩니다.</p><label class="field-label" for="geometry-shape">라벨 모양</label><select id="geometry-shape"><option value="rect">사각형</option><option value="ellipse">원형·타원형</option></select><div class="number-grid" id="geometry-fields"></div><p class="tiny" id="pitch-info"></p><button class="apply-button" id="reset-geometry">제조사 원본 규격으로 복원</button><p id="geometry-error" role="alert"></p></details>
+        <div class="tip"><span>✦</span><p><strong>라벨지가 처음이라면?</strong><br>포장지에 적힌 제품 번호로 찾아보세요.<br>다른 제품도 직접 규격을 입력할 수 있어요.</p></div>
+        <a class="source-link" id="source" target="_blank" rel="noreferrer">제조사 제품 정보 ↗</a>
+      </aside>
+      <section class="preview-panel" aria-label="라벨 미리보기">
+        <div class="preview-toolbar"><div><h2>미리보기</h2><span class="preview-sub">편집할 라벨을 클릭하세요</span></div><div class="zoom"><button id="zoom-out" aria-label="축소">−</button><span id="zoom-label">65%</span><button id="zoom-in" aria-label="확대">+</button></div></div>
+        <div class="canvas" id="canvas"><div class="sheet-wrap" id="sheet-wrap"><div class="sheet" id="sheet"></div></div></div>
+        <div class="preview-footer"><span><i></i> 선택한 라벨 <strong id="selection-number">01</strong></span><label><input type="checkbox" id="show-guides" checked> 칼선 보기</label><span>A4 · 세로</span></div>
+      </section>
+      <aside class="panel editor-panel">
+        <div class="section-heading"><h2>내용 편집</h2><span class="step-tag">STEP 02</span></div>
+        <div class="editing-label"><span class="green-dot"></span><strong id="editing-number">1번 라벨</strong>을 편집하고 있어요</div>
+        <label class="field-label" for="content">라벨 내용</label><textarea id="content" rows="5" maxlength="1000" placeholder="라벨에 넣을 내용을 입력하세요"></textarea>
+        <div class="input-hint">줄을 바꾸려면 Enter<span id="char-count">0 / 1,000</span></div>
+        <label class="field-label" for="font">글꼴</label><select id="font"><option value="sans">나눔고딕</option><option value="serif">나눔명조</option><option value="mono">나눔고딕코딩</option></select>
+        <div class="style-row"><div><label class="field-label" for="font-size">글자 크기</label><div class="size-input"><input id="font-size" type="number" min="6" max="48" step="1"><span>pt</span></div></div><div><label class="field-label" for="color">글자 색상</label><div class="color-input"><input id="color" type="color"><span id="color-value"></span></div></div></div>
+        <div class="format-row"><button id="bold" class="format-button" aria-label="굵게" aria-pressed="false"><b>B</b></button><span class="divider"></span><button data-align="left" class="format-button" aria-label="왼쪽 정렬">☰</button><button data-align="center" class="format-button" aria-label="가운데 정렬">≡</button><button data-align="right" class="format-button" aria-label="오른쪽 정렬">☰</button></div>
+        <button class="apply-button" id="apply-all"><span>▦</span> 모든 라벨에 적용</button><p class="tiny centered">현재 내용과 글자 설정을 모든 칸에 복사해요.</p>
+        <div class="editor-divider"></div><div class="section-heading"><h3>인쇄 설정</h3><span class="step-tag">STEP 03</span></div>
+        <div class="number-grid"><label>시작 라벨 번호<input id="start-label" type="number" min="1" value="1"></label><label>인쇄 매수<input id="copies" type="number" min="1" max="20" value="1"></label></div>
+        <details><summary>인쇄 위치 보정 <span>⌄</span></summary><div class="number-grid"><label>가로 이동 (mm)<input id="offset-x" type="number" min="-10" max="10" step="0.1" value="0"></label><label>세로 이동 (mm)<input id="offset-y" type="number" min="-10" max="10" step="0.1" value="0"></label></div><p class="tiny">양수는 오른쪽 / 아래로 이동해요. 앞부분의 사용한 라벨은 시작 번호로 건너뛸 수 있어요.</p></details>
+        <button class="apply-button calibration-button" id="calibrate">프린터 정밀 보정</button><p class="tiny" id="calibration-status"></p><button class="apply-button" id="proof-print">외곽 시험 인쇄</button>
+        <button class="apply-button calibration-button" id="open-precision">5지점 보정 · 실측 검증</button>
+        <button class="primary-button" id="pdf-export">인쇄용 벡터 PDF 만들기 ↓</button>
+        <button class="text-button pdf-proof-button" id="pdf-proof">라벨 외곽 PDF 만들기</button>
+        <p class="tiny" id="pdf-status" role="status"></p><p class="precision-error" id="precision-error" role="alert"></p>
+        <button class="apply-button" id="print">브라우저 인쇄 ↗</button><p class="tiny centered">정밀 출력은 벡터 PDF를 실제 크기 100%로 인쇄하세요.<br>최종 줄바꿈과 배치는 PDF 미리보기에서 확인해 주세요.</p>
+      </aside>
+    </div>
+    <footer class="page-footer"><span id="save-status" role="status">✓ 자동 저장됨</span><div><button id="export">프로젝트 저장 ↓</button><button id="import">불러오기 ↑</button><input type="file" id="import-file" accept="application/json,.json" hidden></div><span>작은 라벨, 무한한 가능성.</span></footer>
+  </main>
+  <dialog id="print-dialog"><button class="close-dialog" aria-label="닫기">×</button><div class="dialog-icon">▤</div><h2>딱 맞는 인쇄를 위한 마지막 확인</h2><p>프린터 설정에 따라 위치가 달라질 수 있어요.<br>먼저 일반 A4 용지에 시험 인쇄해 보세요.</p><ul><li>용지 크기 <strong>A4 · 세로</strong></li><li>배율 <strong>100% / 실제 크기</strong></li><li>여백 <strong>없음</strong></li><li>머리글과 바닥글 <strong>해제</strong></li></ul><p class="tiny">칼선과 선택 테두리는 인쇄되지 않습니다. 시작 번호 이전의 칸은 모든 인쇄 매수에서 비워집니다.</p><button class="primary-button" id="confirm-print">인쇄 창 열기</button></dialog>
+  <dialog id="help-dialog"><button class="close-dialog" aria-label="닫기">×</button><div class="dialog-icon">✦</div><h2>3단계면 라벨 완성.</h2><ol><li><strong>라벨지를 선택하세요.</strong><p>포장지의 제품 번호를 찾아 선택하세요. 없는 규격은 직접 설정할 수 있어요.</p></li><li><strong>내용을 채워 주세요.</strong><p>미리보기의 칸을 클릭하면 각각 편집할 수 있어요. 같은 내용은 ‘모든 라벨에 적용’을 누르세요.</p></li><li><strong>실제 크기로 인쇄하세요.</strong><p>A4, 배율 100%, 여백 없음으로 설정하세요. 시험 인쇄 후 여백과 위치 보정으로 맞춰 주세요.</p></li></ol><p class="tiny">내용은 이 브라우저에 자동 저장됩니다. 프로젝트 파일을 저장하면 다른 기기에서도 불러올 수 있어요.</p></dialog>
+  <dialog id="calibration-dialog"><button class="close-dialog" aria-label="닫기">×</button><h2>실측으로 프린터 오차 맞추기</h2><p>측정지는 기존 보정 없이 출력됩니다. A4 · 실제 크기 100% · 여백 없음으로 출력한 뒤, 자로 사각형의 바깥쪽 변을 측정하세요.</p><button class="apply-button" id="ruler-print">100 × 100mm 측정지 인쇄</button><div class="number-grid"><label>실측 가로 길이 (mm)<input id="measured-width" type="number" min="90.91" max="111.11" step="0.01" value="100"></label><label>실측 세로 길이 (mm)<input id="measured-height" type="number" min="90.91" max="111.11" step="0.01" value="100"></label><label>종이 왼쪽 → 사각형 (mm)<input id="measured-left" type="number" step="0.01" value="20"></label><label>종이 위쪽 → 사각형 (mm)<input id="measured-top" type="number" step="0.01" value="20"></label></div><p class="tiny">길이 기준 100mm, 시작 위치 기준 20mm입니다. 측정값으로 가로·세로 배율과 위치를 함께 계산합니다.</p><p id="calibration-error" role="alert"></p><button class="primary-button" id="apply-calibration">측정값으로 보정 적용</button><button class="text-button" id="reset-calibration">보정 초기화</button><p class="tiny">보정 후 ‘외곽 시험 인쇄’를 라벨지와 겹쳐 네 모서리·마지막 행을 확인하세요. 급지 편차와 종이 제조 오차는 출력마다 달라질 수 있습니다.</p></dialog>
+  <div id="toast" role="status"></div><div id="print-root" aria-hidden="true"></div>
+  <dialog id="precision-dialog" class="precision-dialog"><button class="close-dialog" aria-label="닫기">×</button><div class="eyebrow">PRINT PRECISION</div><h2>측정하고, 보정하고, 확인하세요.</h2><p>모든 거리는 종이 왼쪽·위쪽 끝부터 십자선의 교차점까지, mm 단위로 입력하세요. 예시 숫자는 입력값이 아닙니다.</p>
+    <div class="precision-columns"><section><h3>1. 다섯 지점으로 보정</h3><p class="tiny">보정 미적용 측정지를 A4 · 실제 크기 100%로 출력하세요. 아래 표는 반드시 이 측정지의 결과를 입력합니다.</p><button class="apply-button" id="fivepoint-pdf">보정 계산용 PDF · 1장</button>
+      <div class="fiducial-map" aria-label="A 왼쪽 위, B 오른쪽 위, C 중앙, D 왼쪽 아래, E 오른쪽 아래"><span>A +</span><span>+ B</span><span>+ C</span><span>D +</span><span>+ E</span></div>
+      <div class="measurement-row measurement-header"><span>지점 · 기준 X, Y</span><span>실측 X (mm)</span><span>실측 Y (mm)</span></div><div id="fit-fields"></div>
+      <button class="apply-button" id="calculate-fivepoint">보정 계산</button><p class="fit-result" id="fit-result" role="status">A–E 실측값을 입력하면 배율·위치·기울어짐을 계산합니다.</p><button class="primary-button" id="apply-fivepoint" disabled>계산한 보정 적용</button>
+      <details><summary>프린터 설정별 보정값 저장 <span>⌄</span></summary><label class="field-label" for="profile-name">프린터 · 급지함 · 용지 설정</label><input class="wide-input" id="profile-name" maxlength="100" placeholder="예: 사무실 프린터 / 수동급지 / 라벨"><button class="apply-button" id="save-printer-profile">현재 보정값 저장</button><label class="field-label" for="printer-profile">저장한 설정</label><select id="printer-profile"></select><button class="apply-button" id="load-printer-profile">선택한 보정값 적용</button></details>
+    </section><section><h3>2. 보정 후 10장으로 확인</h3><p class="tiny">보정 확인용 PDF에 현재 보정이 적용됩니다. 같은 프린터·급지함·용지·배율 설정으로 10장을 출력하세요. 설정을 바꾸면 새 측정을 시작합니다.</p><button class="apply-button" id="verification-pdf">보정 확인용 PDF · 10장</button><label class="field-label" for="verification-settings">이번 검증의 프린터 · 급지함 · 용지 설정</label><input class="wide-input" id="verification-settings" maxlength="200" placeholder="출력에 사용한 설정을 기록하세요"><button class="apply-button" id="new-verification">새 측정 시작</button><p class="tiny">이전 기록이 있으면 파일로 내려받고 새 기록을 시작합니다.</p>
+      <div class="section-heading"><h3 id="verification-next">1번 장 측정값</h3><span id="verification-count">0 / 10장</span></div><div class="measurement-row measurement-header"><span>지점 · 기준 X, Y</span><span>실측 X (mm)</span><span>실측 Y (mm)</span></div><div id="verify-fields"></div><button class="primary-button" id="add-measurement" disabled>이 장의 실측 기록</button><button class="text-button" id="undo-measurement">마지막 기록 수정</button><p class="verification-result" id="verification-result" role="status"></p><ol id="verification-records" class="verification-records"></ol><button class="apply-button" id="export-measurements">실측 기록 JSON 저장 ↓</button><p class="tiny">판정 기준: 10장 × 5지점의 최대 위치 오차 0.5mm 이하.<br>사용자 실측 결과이며 프린터나 라벨지의 정밀도 인증이 아닙니다.</p>
+    </section></div>
+  </dialog>
+  <dialog id="pdf-dialog" class="pdf-dialog"><button class="close-dialog" aria-label="닫기">×</button><h2>인쇄용 벡터 PDF</h2><p id="pdf-summary"></p><p class="precision-error" id="pdf-warnings" role="status"></p><div class="pdf-actions"><a id="pdf-download" class="primary-button" download>PDF 저장 ↓</a><a id="pdf-newtab" class="apply-button" target="_blank" rel="noopener">새 탭에서 열기 ↗</a></div><p class="tiny">인쇄 배율 ‘실제 크기 100%’를 직접 확인하세요. 페이지에 맞춤·자동 축소는 끄세요. 미리보기가 표시되지 않으면 PDF를 저장해 여세요.</p><iframe id="pdf-frame" title="최종 인쇄용 PDF 미리보기"></iframe></dialog>
+  <script src="data/catalog.js"></script>
+  <script src="vendor/pdf-lib.min.js"></script>
+  <script src="vendor/fontkit.umd.min.js"></script>
+  <script src="precision.js"></script>
+  <script src="pdf-export.js"></script>
+  <script src="precision-ui.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
