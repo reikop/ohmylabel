@@ -1,4 +1,4 @@
-(function(root,factory){if(typeof module==='object'&&module.exports)module.exports=factory(require('./vendor/pdf-lib.min.js'),require('./vendor/fontkit.umd.min.js'),require('./precision.js'));else root.LabelPDF=factory(root.PDFLib,root.fontkit,root.LabelPrecision);})(globalThis,(PDF,fontkit,P)=>{
+(function(root,factory){if(typeof module==='object'&&module.exports)module.exports=factory(require('./vendor/pdf-lib.min.js'),require('./vendor/fontkit.umd.min.js'),require('./precision.js'),require('./studio-model.js'));else root.LabelPDF=factory(root.PDFLib,root.fontkit,root.LabelPrecision,root.LabelStudio);})(globalThis,(PDF,fontkit,P,Studio)=>{
   'use strict';
   const PT=72/25.4,H=297*PT,W=210*PT,cache=new Map();
   async function browserFont(key){
@@ -41,6 +41,7 @@
   async function create(project,options={}){
     const mode=options.mode||'labels';if(!['labels','proof','calibration','verification'].includes(mode))throw Error('지원하지 않는 PDF 종류입니다.');
     checkedProject(project);
+    if(Studio&&!Studio.valid(project))throw Error('이미지 데이터나 배치가 유효하지 않습니다.');
     const doc=await PDF.PDFDocument.create();doc.registerFontkit(fontkit);
     doc.setTitle(mode==='labels'?`오마이라벨 ${project.product}`:`오마이라벨 ${mode}`);doc.setCreator('Ohmylabel vector PDF');doc.setLanguage('ko-KR');
     doc.catalog.getOrCreateViewerPreferences().setPrintScaling(PDF.PrintScaling.None);
@@ -49,11 +50,18 @@
     async function font(key){if(!fonts.has(key)){const bytes=await(options.fontLoader||browserFont)(key);const face=fontkit.create(bytes);const embedded=await doc.embedFont(bytes,{subset:false});fonts.set(key,{face,embedded});}return fonts.get(key);}
     const calibration=mode==='calibration'?P.IDENTITY:P.calibration(project);
     const warnings=[];
-    const plan=[];
+    const plan=[],imagePlan=[],embeddedImages=new Map();
     if(mode==='labels'){
+      for(let i=project.start-1;i<project.labels.length;i++)for(const item of project.labels[i].images||[]){
+        const r=P.cell(project.geometry,i),rect={x:r.x+item.x,y:r.y+item.y,width:item.width,height:item.height};
+        if(P.outsidePage(rect,calibration))throw Error(`${i+1}번 라벨의 이미지가 보정 후 A4를 벗어납니다.`);
+        if(project.geometry.shape==='ellipse'&&P.corners(item).some(p=>((p.x-r.width/2)/(r.width/2))**2+((p.y-r.height/2)/(r.height/2))**2>1+1e-8))throw Error(`${i+1}번 라벨: 이미지 모서리가 타원 밖으로 나갑니다. 이미지 크기나 위치를 조절하세요.`);
+        if(!embeddedImages.has(item.assetId)){const data=project.assets[item.assetId].data;try{embeddedImages.set(item.assetId,await(data.startsWith('data:image/png')?doc.embedPng(data):doc.embedJpg(data)));}catch{throw Error(`${i+1}번 라벨의 이미지 파일을 읽지 못했습니다.`);}}
+        imagePlan.push({rect,image:embeddedImages.get(item.assetId)});
+      }
       for(let i=project.start-1;i<project.labels.length;i++){
         const l=project.labels[i];if(!l.text.trim())continue;
-        const r=P.cell(project.geometry,i),safe=safeRect(r,project.geometry.shape),f=await font(l.font+(l.bold?'-bold':''));
+        const r=P.cell(project.geometry,i),safe=l.textBox?{x:r.x+l.textBox.x,y:r.y+l.textBox.y,width:l.textBox.width,height:l.textBox.height}:safeRect(r,project.geometry.shape),f=await font(l.font+(l.bold?'-bold':''));
         const text=l.text.replace(/\r\n?/g,'\n').normalize('NFC');
         const unsupported=Array.from(new Set(Array.from(text).filter(c=>!['\n','\t'].includes(c)&&!f.face.hasGlyphForCodePoint(c.codePointAt(0)))));
         if(unsupported.length)throw Error(`${i+1}번 라벨: 포함된 글꼴이 지원하지 않는 문자 ${unsupported.slice(0,5).join(' ')}. 문자나 글꼴을 변경해 주세요.`);
@@ -64,7 +72,7 @@
         if(P.outsidePage(safe,calibration))throw Error(`${i+1}번 라벨의 보정된 내용 영역이 A4 밖으로 나갑니다. 보정값을 확인해 주세요.`);
         plan.push({i,l,r,safe,f,lines,ascent,lineHeight,blockHeight});
       }
-      if(!plan.length)throw Error('선택한 인쇄 범위에 내용이 없습니다.');
+      if(!plan.length&&!imagePlan.length)throw Error('선택한 인쇄 범위에 내용이 없습니다.');
     }
     const pageCount=mode==='labels'?project.copies:mode==='verification'?10:1;
     const regular=mode==='labels'?null:(await font('sans')).embedded;
@@ -73,6 +81,7 @@
     for(let n=0;n<pageCount;n++){
       const page=doc.addPage([W,H]);page.setMediaBox(0,0,W,H);page.setCropBox(0,0,W,H);
       page.pushOperators(PDF.pushGraphicsState(),PDF.concatTransformationMatrix(...P.pdfMatrix(calibration)));
+      if(mode==='labels')for(const item of imagePlan){const r=item.rect;page.drawImage(item.image,{x:r.x*PT,y:H-(r.y+r.height)*PT,width:r.width*PT,height:r.height*PT});}
       if(mode==='labels')for(const item of plan){
         const {l,safe,f,lines,ascent,lineHeight,blockHeight}=item;
         const firstBaseline=H-(safe.y*PT+(safe.height*PT-blockHeight)/2+ascent);

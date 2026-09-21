@@ -2,8 +2,9 @@
   "name": "ohmylabel",
   "private": true,
   "scripts": {
-    "test": "node tests/app.test.cjs && node tests/precision.test.cjs && node tests/precision-ui.test.cjs",
+    "test": "node tests/app.test.cjs && node tests/precision.test.cjs && node tests/precision-ui.test.cjs && node tests/studio.test.cjs",
+    "test:browser": "node tests/studio-browser.test.cjs",
     "pdf:fixtures": "node scripts/generate-pdf-fixtures.cjs"
   },
-  "devDependencies": { "jsdom": "26.1.0" }
+  "devDependencies": { "jsdom": "26.1.0", "playwright": "1.63.0" }
 }

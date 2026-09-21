@@ -27,7 +27,7 @@ jobs:
       - name: Prepare site
         run: |
           mkdir -p _site/data
-          cp index.html styles.css app.js precision.js precision-ui.js pdf-export.js THIRD_PARTY.md _site/
+          cp index.html styles.css app.js precision.js precision-ui.js pdf-export.js studio-model.js studio-ui.js THIRD_PARTY.md _site/
           cp data/catalog.js _site/data/
           cp -R assets vendor _site/
       - uses: actions/configure-pages@v5
