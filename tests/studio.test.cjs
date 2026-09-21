@@ -3,4 +3,9 @@ const data=M.table([['이름','우편번호','이름'],['홍길동','00123','배
 assert.deepEqual(data.headers,['이름','우편번호','이름_2']);assert.equal(M.merge(data,'{{이름}} 님\n{{우편번호}}')[0],'홍길동 님\n00123');assert.throws(()=>M.merge(data,'{{없는열}}'));assert.equal(M.valid({version:1}),false);assert.equal(M.valid(project),true);
 const bad=structuredClone(project);bad.labels[0].images=[{assetId:'missing',x:0,y:0,width:1,height:1}];assert.equal(M.valid(bad),false);
 const box=M.fit({x:99,y:90,width:50,height:20},{width:30,height:10});assert.ok(M.box(box,{width:30,height:10}));
+const grid=[['이름','주소'],['홍길동','서울'],[],['김라벨','부산']];
+assert.deepEqual(M.cellMerge(grid,'{{A1}}: {{a2}} / {{B2}}'),['이름: 홍길동 / 서울']);
+assert.deepEqual(M.cellMerge(grid,'{{A2}} {{B2}}',true),['홍길동 서울',' ','김라벨 부산']);
+assert.equal(M.columnName(26),'AA');assert.throws(()=>M.cellMerge(grid,'{{A0}}'));assert.throws(()=>M.cellMerge(grid,'{{C1}}'));
+const multiple=structuredClone(project);multiple.labels[0].textBoxes=[{...multiple.labels[0],text:'추가 텍스트',textBox:{x:3,y:2,width:40,height:12}}];assert.ok(M.valid(multiple));multiple.labels[0].textBoxes[0].textBox.width=300;assert.equal(M.valid(multiple),false);
 (async()=>{await assert.rejects(()=>PDF.create(bad,{fontLoader}),/이미지/);console.log('PASS: merge headers, leading zeros, literal HTML, missing fields, invalid project and image references, and geometry bounds.');})().catch(e=>{console.error(e);process.exitCode=1;});

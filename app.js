@@ -54,7 +54,7 @@
     const n=state.geometry.cols*state.geometry.rows;
     // Keep existing content when switching products; additional slots start empty.
     state.labels=Array.from({length:n},(_,i)=>state.labels[i] || {...newLabel(),text:''});
-    if(globalThis.LabelStudio)for(const l of state.labels){if(l.images)l.images=l.images.map(i=>globalThis.LabelStudio.fit(i,state.geometry));if(l.textBox)l.textBox=globalThis.LabelStudio.fit(l.textBox,state.geometry);}state.selected=Math.min(state.selected,n-1);state.start=Math.min(state.start,n);
+    if(globalThis.LabelStudio)for(const l of state.labels){if(l.images)l.images=l.images.map(i=>globalThis.LabelStudio.fit(i,state.geometry));if(l.textBox)l.textBox=globalThis.LabelStudio.fit(l.textBox,state.geometry);for(const t of l.textBoxes||[])t.textBox=globalThis.LabelStudio.fit(t.textBox,state.geometry);}state.selected=Math.min(state.selected,n-1);state.start=Math.min(state.start,n);
   }
   function renderGeometry() {
     const p=products.find(p=>p.id===state.product),g=state.geometry;
@@ -75,8 +75,9 @@
   function makeLabel(index,printing=false) {
     const g=state.geometry,l=state.labels[index],cell=document.createElement(printing?'div':'button');
     cell.className='label';cell.style.left=`${mm(g.left+(index%g.cols)*(g.width+g.gapX))}mm`;cell.style.top=`${mm(g.top+Math.floor(index/g.cols)*(g.height+g.gapY))}mm`;cell.style.width=mm(g.width)+'mm';cell.style.height=mm(g.height)+'mm';cell.style.borderRadius=g.shape==='ellipse'?'50%':'0';cell.style.fontFamily=fonts[l.font];cell.style.fontSize=l.size+'pt';cell.style.fontWeight=l.bold?'700':'400';cell.style.color=l.color;cell.style.textAlign=l.align;
-    const content=document.createElement('span');content.className='label-content';content.textContent=l.text;if(l.textBox){const b=l.textBox;Object.assign(content.style,{position:'absolute',left:b.x+'mm',top:b.y+'mm',width:b.width+'mm',height:b.height+'mm',display:'flex',flexDirection:'column',justifyContent:'center',overflow:'hidden'});}cell.append(content);
-    if(l.images&&(!printing||printMode!=='proof'))for(const item of l.images){const asset=state.assets?.[item.assetId];if(!asset)continue;const image=document.createElement('img');image.className='label-image';image.src=asset.data;image.alt='';image.style.left=item.x+'mm';image.style.top=item.y+'mm';image.style.width=item.width+'mm';image.style.height=item.height+'mm';cell.append(image);}
+    const content=document.createElement('span');content.className='label-content';content.textContent=l.text;if(l.textBox){const b=l.textBox;Object.assign(content.style,{position:'absolute',left:b.x+'mm',top:b.y+'mm',width:b.width+'mm',height:b.height+'mm',display:'flex',flexDirection:'column',justifyContent:'center',overflow:'hidden'});}content.style.zIndex=String(l.textZ??100);cell.append(content);
+    if(l.images&&(!printing||printMode!=='proof'))for(const item of l.images){const asset=state.assets?.[item.assetId];if(!asset)continue;const image=document.createElement('img');image.className='label-image';image.src=asset.data;image.alt='';image.style.left=item.x+'mm';image.style.top=item.y+'mm';image.style.width=item.width+'mm';image.style.height=item.height+'mm';image.style.zIndex=String(item.z??l.images.indexOf(item));cell.append(image);}
+    if(l.textBoxes&&(!printing||printMode!=='proof'))for(const [n,t] of l.textBoxes.entries()){const b=t.textBox,span=document.createElement('span');span.className='label-textbox';span.textContent=t.text;Object.assign(span.style,{position:'absolute',left:b.x+'mm',top:b.y+'mm',width:b.width+'mm',height:b.height+'mm',fontFamily:fonts[t.font],fontSize:t.size+'pt',fontWeight:t.bold?'700':'400',color:t.color,textAlign:t.align,zIndex:String(t.z??101+n)});cell.append(span);}
     if(!printing){cell.classList.toggle('selected',index===state.selected);cell.classList.toggle('skipped',index<state.start-1);cell.setAttribute('aria-label',`${index+1}번 라벨: ${l.text || '빈 라벨'}`);cell.setAttribute('aria-pressed',String(index===state.selected));cell.addEventListener('click',()=>{state.selected=index;renderSheet();renderEditor();save();});}
     return cell;
   }

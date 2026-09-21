@@ -57,10 +57,10 @@
         if(P.outsidePage(rect,calibration))throw Error(`${i+1}번 라벨의 이미지가 보정 후 A4를 벗어납니다.`);
         if(project.geometry.shape==='ellipse'&&P.corners(item).some(p=>((p.x-r.width/2)/(r.width/2))**2+((p.y-r.height/2)/(r.height/2))**2>1+1e-8))throw Error(`${i+1}번 라벨: 이미지 모서리가 타원 밖으로 나갑니다. 이미지 크기나 위치를 조절하세요.`);
         if(!embeddedImages.has(item.assetId)){const data=project.assets[item.assetId].data;try{embeddedImages.set(item.assetId,await(data.startsWith('data:image/png')?doc.embedPng(data):doc.embedJpg(data)));}catch{throw Error(`${i+1}번 라벨의 이미지 파일을 읽지 못했습니다.`);}}
-        imagePlan.push({rect,image:embeddedImages.get(item.assetId)});
+        imagePlan.push({z:item.z??project.labels[i].images.indexOf(item),rect,image:embeddedImages.get(item.assetId)});
       }
       for(let i=project.start-1;i<project.labels.length;i++){
-        const l=project.labels[i];if(!l.text.trim())continue;
+        for(const l of Studio?Studio.textItems(project.labels[i]):[project.labels[i]]){if(!l.text.trim())continue;
         const r=P.cell(project.geometry,i),safe=l.textBox?{x:r.x+l.textBox.x,y:r.y+l.textBox.y,width:l.textBox.width,height:l.textBox.height}:safeRect(r,project.geometry.shape),f=await font(l.font+(l.bold?'-bold':''));
         const text=l.text.replace(/\r\n?/g,'\n').normalize('NFC');
         const unsupported=Array.from(new Set(Array.from(text).filter(c=>!['\n','\t'].includes(c)&&!f.face.hasGlyphForCodePoint(c.codePointAt(0)))));
@@ -69,8 +69,9 @@
         const ascent=f.face.ascent/f.face.unitsPerEm*l.size,descent=Math.abs(f.face.descent)/f.face.unitsPerEm*l.size,lineHeight=Math.max(l.size*1.55,ascent+descent);
         const blockHeight=ascent+descent+(lines.length-1)*lineHeight;
         if(blockHeight>safe.height*PT+1e-7)throw Error(`${i+1}번 라벨의 문구가 안전 영역을 넘습니다. 글자 크기나 줄 수를 줄여 주세요.`);
+        if(project.geometry.shape==='ellipse'&&P.corners(safe).some(p=>((p.x-r.x-r.width/2)/(r.width/2))**2+((p.y-r.y-r.height/2)/(r.height/2))**2>1+1e-8))throw Error(`${i+1}번 라벨: 텍스트 박스가 타원 밖으로 나갑니다.`);
         if(P.outsidePage(safe,calibration))throw Error(`${i+1}번 라벨의 보정된 내용 영역이 A4 밖으로 나갑니다. 보정값을 확인해 주세요.`);
-        plan.push({i,l,r,safe,f,lines,ascent,lineHeight,blockHeight});
+        plan.push({z:l.z??100,i,l,r,safe,f,lines,ascent,lineHeight,blockHeight});}
       }
       if(!plan.length&&!imagePlan.length)throw Error('선택한 인쇄 범위에 내용이 없습니다.');
     }
@@ -81,8 +82,7 @@
     for(let n=0;n<pageCount;n++){
       const page=doc.addPage([W,H]);page.setMediaBox(0,0,W,H);page.setCropBox(0,0,W,H);
       page.pushOperators(PDF.pushGraphicsState(),PDF.concatTransformationMatrix(...P.pdfMatrix(calibration)));
-      if(mode==='labels')for(const item of imagePlan){const r=item.rect;page.drawImage(item.image,{x:r.x*PT,y:H-(r.y+r.height)*PT,width:r.width*PT,height:r.height*PT});}
-      if(mode==='labels')for(const item of plan){
+      if(mode==='labels')for(const item of [...imagePlan,...plan].sort((a,b)=>a.z-b.z)){if(item.image){const r=item.rect;page.drawImage(item.image,{x:r.x*PT,y:H-(r.y+r.height)*PT,width:r.width*PT,height:r.height*PT});continue;}
         const {l,safe,f,lines,ascent,lineHeight,blockHeight}=item;
         const firstBaseline=H-(safe.y*PT+(safe.height*PT-blockHeight)/2+ascent);
         lines.forEach((value,j)=>{if(!value)return;const width=f.embedded.widthOfTextAtSize(value,l.size);const x=safe.x*PT+(l.align==='center'?(safe.width*PT-width)/2:l.align==='right'?safe.width*PT-width:0);page.drawText(value,{x,y:firstBaseline-j*lineHeight,size:l.size,font:f.embedded,color:color(l.color)});});
